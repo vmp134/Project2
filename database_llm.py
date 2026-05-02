@@ -28,25 +28,21 @@ import sys
 import getpass
 import requests
 import paramiko
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
-# ─── Configuration ─────────────────────────────────────────────────────────────
+# ─── Configuration ────────────────────────────────────────────────────────────
 
-# Subset SQL file fed to the LLM as schema context
-SCHEMA_FILE = "./project1.sql"
-
-# Ollama settings
+SCHEMA_FILE  = "./schema_subset.sql"
 OLLAMA_URL   = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5:3b"
-CONTEXT_SIZE = 2048   # token context window (professor says 2048)
-MAX_TOKENS   = 200    # max tokens the LLM will generate (professor says 200)
-
-# ilab SSH settings
-ILAB_HOST   = "ilab.cs.rutgers.edu"
-ILAB_PORT   = 22
-
-# Full path to ilab_script.py on the ilab machine (edit to match your ilab path)
-ILAB_SCRIPT = "/common/home/vmp134/RutgersCoursework/cs336/Assignments/p2venv/bin/python3 /common/home/vmp134/RutgersCoursework/cs336/Assignments/Project2/ilab_script.py"
+CONTEXT_SIZE = 2048
+MAX_TOKENS   = 200
+ILAB_HOST    = "ilab.cs.rutgers.edu"
+ILAB_PORT    = 22
+ILAB_SCRIPT  = os.getenv("ILAB_SCRIPT")   # loaded from .env
 
 
 # ─── Step 1: Load schema once at startup ───────────────────────────────────────

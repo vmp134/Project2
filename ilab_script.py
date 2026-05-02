@@ -80,7 +80,11 @@ def run_query(query: str) -> None:
 
     try:
         # Use pandas to fetch results — handles column names automatically
-        df = pd.read_sql_query(query, conn)
+        cursor = conn.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cols = [desc[0] for desc in cursor.description]
+        df = pd.DataFrame(rows, columns=cols)
 
         if df.empty:
             print("Query returned 0 rows.")

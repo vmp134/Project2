@@ -33,11 +33,11 @@ import paramiko
 # ─── Configuration ─────────────────────────────────────────────────────────────
 
 # Subset SQL file fed to the LLM as schema context
-SCHEMA_FILE = "./schema_subset.sql"
+SCHEMA_FILE = "./project1.sql"
 
 # Ollama settings
 OLLAMA_URL   = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "phi4-mini"
+OLLAMA_MODEL = "qwen2.5:3b"
 CONTEXT_SIZE = 2048   # token context window (professor says 2048)
 MAX_TOKENS   = 200    # max tokens the LLM will generate (professor says 200)
 
@@ -46,7 +46,7 @@ ILAB_HOST   = "ilab.cs.rutgers.edu"
 ILAB_PORT   = 22
 
 # Full path to ilab_script.py on the ilab machine (edit to match your ilab path)
-ILAB_SCRIPT = "~/cs336/project3/venv/bin/python3 ~/cs336/project3/ilab_script.py"
+ILAB_SCRIPT = "/common/home/vmp134/RutgersCoursework/cs336/Assignments/p2venv/bin/python3 /common/home/vmp134/RutgersCoursework/cs336/Assignments/Project2/ilab_script.py"
 
 
 # ─── Step 1: Load schema once at startup ───────────────────────────────────────
@@ -65,7 +65,7 @@ def load_schema(path: str) -> str:
 
 def check_ollama() -> None:
     """
-    Verify Ollama is running and the phi4-mini model is available
+    Verify Ollama is running and the qwen model is available
     before entering the main loop.
     """
     try:
@@ -100,15 +100,17 @@ def build_prompt(schema: str, question: str) -> str:
         "You are an expert PostgreSQL query writer. "
         "Given a database schema and a natural language question, "
         "write a single valid SELECT SQL query that answers the question. "
-        "Output ONLY the raw SQL query — no explanation, no markdown fences, "
-        "no preamble, no extra text whatsoever.\n"
+        "You MUST only use tables and columns that exist in the schema below. "
+        "Do NOT invent tables, columns, aliases, or placeholder values. "
+        "Do NOT include comments, explanations, or markdown. "
+        "Output ONLY the raw SQL query and nothing else.\n"
         "<|end|>\n"
         "<|user|>\n"
         f"-- Database schema:\n{schema}\n\n"
         f"-- Question: {question}\n"
         "<|end|>\n"
         "<|assistant|>\n"
-        "SELECT"   # prime the model to start with SELECT immediately
+        "SELECT "
     )
 
 
@@ -160,8 +162,16 @@ def extract_sql(llm_output: str) -> str | None:
     statements. Try several strategies in order of preference to pull
     out exactly one clean SELECT query.
     """
-    # The prompt already primed with "SELECT", so prepend it back
-    full_text = "SELECT" + llm_output
+    # Strip markdown code fences
+    llm_output = re.sub(r"```sql", "", llm_output, flags=re.IGNORECASE)
+    llm_output = re.sub(r"```", "", llm_output)
+
+    # Remove ALL leading SELECT keywords (handles SELECTSELECT, SELECT SELECT, etc.)
+    stripped = llm_output.strip()
+    stripped = re.sub(r"^(SELECT\s*)+", "", stripped, flags=re.IGNORECASE).strip()
+    
+    # Now prepend exactly one clean SELECT
+    full_text = "SELECT " + stripped
 
     # Strategy 1: content inside ```sql ... ``` or ``` ... ``` fences
     match = re.search(r"```(?:sql)?\s*(SELECT[\s\S]+?)```", full_text, re.IGNORECASE)
@@ -240,7 +250,7 @@ def run_query_on_ilab(sql: str, username: str, password: str) -> str:
 def main():
     print("=" * 60)
     print("  HMDA Mortgage Database — Natural Language Query Tool")
-    print("  Powered by Phi-4-mini via Ollama")
+    print("  Powered by Qwen2.5-3B via Ollama")
     print("=" * 60)
     print()
 

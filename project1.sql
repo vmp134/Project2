@@ -153,7 +153,11 @@ CREATE TABLE Location (
     number_of_1_to_4_family_units INT
 );
 
-
+-- THIS IS THE MAIN TABLE. Use this for most queries.
+-- loan_amount_000s = the loan/mortgage value in thousands
+-- applicant_income_000s = the applicant's income in thousands
+-- To compare loan value vs income: WHERE loan_amount_000s > applicant_income_000s
+-- There is NO table called "Applicant" — use "Application" instead.
 CREATE TABLE Application (
     ApplicationID SERIAL PRIMARY KEY,
     prelim_id INT,

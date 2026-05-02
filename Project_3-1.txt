@@ -1,0 +1,154 @@
+For this project you will make a program that accesses the database using
+natural language using a local llm. It is worth 12 pts.
+
+This project uses the database from project 1. If yours does not work at all, you can get a working one from another group, and make sure to cite them in your README. If yours mostly works, you can just use it as long as it has many tables and all the data. If it has both these features it will work fine for this project.
+
+This program will have several parts. Much of the programming work will be
+debugging, you are encouraged to use online LLMs for debugging and
+figuring out the project.
+If you are unsure of any part of this project, you should as an LLM to
+explain it to you. AI use is permitted for this project. The good ones
+right now are the latest models from Claude, gemini flash/pro, and open AI chatgpt-5. 
+You
+should have free access to gemeni through your rutgers email address and
+the others through varios free trials. YOU MUST INCLUDE ALL TRANSCRIPTS OF
+ALL CHATS.
+For all parts: You may need to install new packages using pip or pip3.
+
+ON ILAB:
+1. A stub python program which takes in as an argument a SELECT SQL
+query, and prints out the results on the database. (Note pandas may be
+helpful for table formatting). You can also make this program
+work by reading from stdin when no argument is passed, you will need
+to adjust the ssh tunnel to pass via stdin as well. This last sentence is optional, it is find to pass arguments as well
+
+LOCALLY:
+1. Make a file which is a subset of the previos SQL script including only
+the create table statemnts and a few insert ones.
+2. Get an llm running. You must use one that uses up to 4 billion parameters to
+keep the project fair for everyone. I recomend
+https://huggingface.co/microsoft/Phi-4-mini-instruct or
+https://huggingface.co/Qwen/Qwen2.5-3B-Instruct. You will need to
+install packages to make it work, I recommend llamma_cpp_python.
+3. Do very basic text proccessing to make a prompt it will include
+instrucitons (e.g. write and SQL query) the entire file that you
+wrote, and the user's question.
+-Instructions may be along the lines of "Write an SQL query in
+response to the following schema and question" But you will need to
+experiment to see what works best.
+-The better your prompt the less text processing you will need to
+do, be sure to ask the other llms what good prompts might be.
+4. Write logic to have a loop where you take questions from the user and
+feed them into the llm. The loop should end and close the program if
+the user types in the exact string "exit"
+5. Process the response to extract only the SQL query. (iterativly adjust
+your text processing and your prompt to find something that works)
+6. Use an SSH tunnel to call the script you wrote on ilab with the output
+of the llm. (I recommend paramiko) YOU MUST NOT TAKE IN PASSWORDS IN A
+VISIBLE WAY. You should prompt the user using getpass library.
+7. Put all of this together to make an interactive program that displays
+the results of the query to the user.
+
+|SSH credentials (username, then password)|->[SSH TUNNEL]
+|User question| + [scema from project 1] + [prompt language]->[LLM]-
+>[Some Text]->[5. String processer]->|SQL SELECT QUERY FROM INSIDE THAT
+TEXT|
+|SQL SELECT QUERY FROM INSIDE THAT TEXT|->[SSH TUNNEL]->[stub python
+program on ILAB]->[Postgres.cs.rutgers.edu postgres instance]->|Table|
+|Table| -> [SSH TUNNEL] -> Print out answer
+
+EXTRA CREDIT
+------------
+
+
+This part is only recommended if you find yourself with spare time, it will take more time than it is worth in points.
+
+This part is worth up to 3 points (3% of your final grade) in extra credit.
+
+If you are unsure of any part of this project, you should as an LLM to explain it to you. AI use is permitted for this project. The good ones right now are Claude gemini  and chat GPT. You should have free access to gemeni through your rutgers email address and the others through varios free trials. YOU MUST INCLUDE ALL TRANSCRIPTS OF ALL CHATS.
+
+The goal of this project is to have a working front end for your project. In order to make this work you will need to choose a frontend framework, you may choose any one you like.
+
+ 
+The points will be awarded as follows:
+
+1 pt: basic working frontend that provides the functionality that the backend did. For this you need a textbox to enter in the natural language query and be able to see the output. you should also be able to go back and make new question once you are done looking at the output.
+
+1pt organized interactive tables that you can sort and interact with. The output table should be well formatted and have interactive tables. You should also in general have an attractive interface that looks modern
+
+1pt Ability to see output. This should have separate boxes in the output screen to show the SQL query, and the table and another box to show the output of the LLM, along with the original query done by the user.
+
+TO SUBMIT:
+
+Show a short (<1 minute) video showing your program working. You are permitted to have a cut to save time waiting for the llm to work. It should show off all the features you implemented and everything from the code being run in the command line to the user interface
+
+Submit a README describing which features you implemented
+
+All code needed to run the project. This should include the SQL code to make the database, the python code to run the llm (including both scripts) and whatever frontend code you use.
+
+Please also submit the citiations and transcripts of any chats you use.
+
+ 
+
+
+Academic Dishonesty
+------------------
+Code coppied from anywhere will be dealt with according to the Rutgers
+Academic Dishonesty policy.
+If the copied code's source is referenced, the maximum penalty will be 75%
+off the given assingment,
+and likely nothing depending on how much was copied and whether you had
+the license.
+It is OK to take code from official language documentation, but you should
+still cite it.
+If the code is not cited, and makes up a substantial portion of the
+project, the MINIMUM penalty will be
+a zero on the assignment.
+RUBRIC:
+We will test on 5 queries, it must work for 3 of them. I will make sure
+all 5 work on my machine.
+3 pts: Your ilab program works correctly, taking in a SELECT query as the
+first argument and printing a well formatted table that can be read.
+
+3 pts: You have a running LLM that can take in instructions and return
+some text(steps 2-3)
+
+3 pts: You have working non-llm logic that takes the llm response and
+turns it into a single SELECT query string(Step 1,5) And you have a query
+file including the neccecary create table scripts (IF YOU DIDN"T DO THE
+PREVIOS STEP, YOU CAN SHOW THAT THIS WORKS BY MANUALLY FEEDING IN AN LLM
+RESPONSE FROM ONLINE MODELS)
+3 pts: You got the SSH tunnel working and assembled all previos steps into
+a coherent program that accomplishes the task. (Step 4,6-7)
+
+ADDITIONAL DEMERIT:
+- 3 points no readme.
+- 5 points Do not include full LLM transcripts.
+-? other missing parts not covered by previos sections.
+TO TURN IN:
+1. The working scripts called database_llm.py to run locally and
+ilab_script.py to run on ilab machine.
+1a. The 2 SQL scripts to create the database and the one to feed into the
+LLM
+2. A video of your project working (or a link to an uploaded one). It
+should show success on at least 3 different queries. All 3 should be successful.
+3. A readme:
+Naming all team members
+their contributions
+What you found challenging
+What you found interesting
+Did you do the extra credit
+4. transcripts of all chats you used to complete this project.
+
+HINTS:
+A good testing query is "How many mortgages have a loan value greater than
+the applicant income?"
+And "What is the average income of owner occupied applications?" and "What
+is the most common loan denial reason?"
+My context window is 2048 larger context will let you pass more of your
+schema at the expense of slower llm.
+my max_tokens is 200. This is the maximum number of words the llm will
+generate
+if you end your prompt with the sql flag it will be a lot more likely to
+immediately give an SQL query.
+

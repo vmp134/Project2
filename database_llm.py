@@ -193,8 +193,15 @@ def extract_sql(llm_output: str) -> str | None:
     # Replace overly complex owner_occupancy joins with simple integer check
     # The model keeps guessing the wrong string value for owner_occupancy_name
     llm_output = re.sub(
-        r"JOIN Owner_Occupancy ON Application\.owner_occupancy = Owner_Occupancy\.owner_occupancy\s*WHERE Owner_Occupancy\.owner_occupancy_name\s*(LIKE|=)\s*'[^']*'",
+        r"JOIN Owner_Occupancy ON[^W]+WHERE Owner_Occupancy\.owner_occupancy_name\s*(LIKE|=)\s*'[^']*'",
         "WHERE owner_occupancy = 1",
+        llm_output,
+        flags=re.IGNORECASE
+    )
+    # Fix bad join condition: owner_occupancy = owner_occupancy_name (int = text)
+    llm_output = re.sub(
+        r"JOIN Owner_Occupancy ON Application\.owner_occupancy = Owner_Occupancy\.owner_occupancy_name",
+        "WHERE Application.owner_occupancy = 1 --",
         llm_output,
         flags=re.IGNORECASE
     )

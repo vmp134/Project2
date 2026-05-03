@@ -278,7 +278,7 @@ def main():
     while True:
         # Get question from user
         try:
-            question = input("\nYour question: ").strip()
+            question = input("\nYour question: ").strip().strip('"').strip("'").strip()
         except (EOFError, KeyboardInterrupt):
             print("\nGoodbye.")
             break
@@ -288,11 +288,11 @@ def main():
             print("Goodbye.")
             break
 
-        question = input("\nYour question: ").strip()
         if not question:
             continue
 
         # ── Steps 3 & 4: Build prompt and query Ollama ────────────────────────
+        print(f"  [Question received]: {question!r}")
         print("  [LLM] Generating SQL query...", end="", flush=True)
 
         prompt   = build_prompt(schema, question)

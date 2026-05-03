@@ -141,10 +141,8 @@ Did you do the extra credit
 4. transcripts of all chats you used to complete this project.
 
 HINTS:
-A good testing query is "How many mortgages have a loan value greater than
-the applicant income?"
-And "What is the average income of owner occupied applications?" and "What
-is the most common loan denial reason?"
+A good testing query is "How many mortgages have a loan value greater than the applicant income?"
+And "What is the average income of owner occupied applications?" and "What is the most common loan denial reason?"
 My context window is 2048 larger context will let you pass more of your
 schema at the expense of slower llm.
 my max_tokens is 200. This is the maximum number of words the llm will

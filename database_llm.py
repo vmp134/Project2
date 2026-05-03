@@ -289,7 +289,7 @@ def main():
             break
 
         question = input("\nYour question: ").strip()
-        if not question or question.isspace():
+        if not question:
             continue
 
         # ── Steps 3 & 4: Build prompt and query Ollama ────────────────────────

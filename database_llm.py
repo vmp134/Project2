@@ -155,23 +155,25 @@ def fix_column_names(sql: str) -> str:
     These are all verified against the actual schema in project1.sql.
     """
     replacements = {
-        # Denial.ReasonName → Denial_Reason.denial_reason_name
+        # Denial_Reason table - all known misspellings
         r"\bDenial\.ReasonName\b": "Denial_Reason.denial_reason_name",
         r"\bD\.ReasonName\b": "Denial_Reason.denial_reason_name",
         r"\bT\d\.ReasonName\b": "Denial_Reason.denial_reason_name",
         r"\bReasonName\b": "denial_reason_name",
-        # Other denial reason hallucinations
         r"\bdonation_reason\b": "denial_reason",
         r"\bdeprivation_reason\b": "denial_reason",
         r"\bdeny_reason\b": "denial_reason",
         r"\bdenyal_reason\b": "denial_reason",
+        r"\bdenoal_reason\b": "denial_reason",           # new
         r"\bdenial_reason_id\b": "denial_reason",
         r"\bdeprivation_reason_name\b": "denial_reason_name",
         r"\bdeny_reason_name\b": "denial_reason_name",
+        r"\bdenoal_reason_name\b": "denial_reason_name", # new
         r"\breason_name\b": "denial_reason_name",
         # Owner_Occupancy table
         r"\bowner_occupancy_code\b": "owner_occupancy",
         r"\bowner_occupancy_id\b": "owner_occupancy",
+        r"\bowner_occupied_units\b": "owner_occupancy",
         # Application table
         r"\bapplication_income_000s\b": "applicant_income_000s",
         r"\bloan_value_000s\b": "loan_amount_000s",
@@ -187,6 +189,17 @@ def extract_sql(llm_output: str) -> str | None:
 
     # Fix single-quoted aliases → double-quoted
     llm_output = re.sub(r"AS\s+'([^']+)'", r'AS "\1"', llm_output)
+
+    # Replace overly complex owner_occupancy joins with simple integer check
+    # The model keeps guessing the wrong string value for owner_occupancy_name
+    llm_output = re.sub(
+        r"JOIN Owner_Occupancy ON Application\.owner_occupancy = Owner_Occupancy\.owner_occupancy\s*WHERE Owner_Occupancy\.owner_occupancy_name\s*(LIKE|=)\s*'[^']*'",
+        "WHERE owner_occupancy = 1",
+        llm_output,
+        flags=re.IGNORECASE
+    )
+    # Also remove any leftover GROUP BY owner_occupied_units
+    llm_output = re.sub(r"GROUP BY Application\.owner_occupied_units", "", llm_output, flags=re.IGNORECASE)
 
     # Remove ALL leading SELECT keywords (handles SELECTSELECT, SELECT SELECT, etc.)
     stripped = llm_output.strip()

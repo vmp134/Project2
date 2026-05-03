@@ -288,7 +288,8 @@ def main():
             print("Goodbye.")
             break
 
-        if not question:
+        question = input("\nYour question: ").strip()
+        if not question or question.isspace():
             continue
 
         # ── Steps 3 & 4: Build prompt and query Ollama ────────────────────────

@@ -81,16 +81,6 @@ def check_ollama() -> None:
 # ─── Step 3: Build the prompt ──────────────────────────────────────────────────
 
 def build_prompt(schema: str, question: str) -> str:
-    """
-    Phi-4-mini uses the ChatML format:
-        <|system|> ... <|end|>
-        <|user|>   ... <|end|>
-        <|assistant|>
-
-    Ending the prompt with "SELECT" primes the model to begin
-    generating SQL immediately rather than explaining itself first.
-    (Professor's tip: ending with the sql flag helps a lot.)
-    """
     return (
         "<|system|>\n"
         "You are an expert PostgreSQL query writer. "
@@ -103,7 +93,14 @@ def build_prompt(schema: str, question: str) -> str:
         "<|end|>\n"
         "<|user|>\n"
         f"-- Database schema:\n{schema}\n\n"
-        f"-- Question: {question}\n"
+        "-- Examples of correct queries:\n"
+        "-- Q: How many mortgages have a loan value greater than the applicant income?\n"
+        "-- A: SELECT COUNT(*) FROM Application WHERE loan_amount_000s > applicant_income_000s;\n\n"
+        "-- Q: What is the average income of owner occupied applications?\n"
+        "-- A: SELECT AVG(applicant_income_000s) FROM Application WHERE owner_occupancy = 1;\n\n"
+        "-- Q: What is the most common loan denial reason?\n"
+        "-- A: SELECT denial_reason_name, COUNT(*) AS count FROM Denial JOIN Denial_Reason ON Denial.denial_reason = Denial_Reason.denial_reason GROUP BY denial_reason_name ORDER BY count DESC LIMIT 1;\n\n"
+        f"-- Q: {question}\n"
         "<|end|>\n"
         "<|assistant|>\n"
         "SELECT "
@@ -153,20 +150,32 @@ def query_ollama(prompt: str) -> str:
 # ─── Step 5: Extract only the SQL query from LLM output ───────────────────────
 
 def extract_sql(llm_output: str) -> str | None:
-    """
-    The LLM output may contain markdown, explanation text, or multiple
-    statements. Try several strategies in order of preference to pull
-    out exactly one clean SELECT query.
-    """
     # Strip markdown code fences
     llm_output = re.sub(r"```sql", "", llm_output, flags=re.IGNORECASE)
     llm_output = re.sub(r"```", "", llm_output)
+    llm_output = llm_output.replace("deny_reason_name", "denial_reason_name")
+    llm_output = llm_output.replace("deny_reason", "denial_reason")
+    llm_output = llm_output.replace("denyal_reason", "denial_reason")
+
+    # Fix single-quoted aliases → double-quoted
+    llm_output = re.sub(r"AS\s+'([^']+)'", r'AS "\1"', llm_output)
 
     # Remove ALL leading SELECT keywords (handles SELECTSELECT, SELECT SELECT, etc.)
     stripped = llm_output.strip()
     stripped = re.sub(r"^(SELECT\s*)+", "", stripped, flags=re.IGNORECASE).strip()
-    
-    # Now prepend exactly one clean SELECT
+
+    # Strip leading opening paren from wrapped subqueries e.g. (SELECT ...
+    stripped = re.sub(r"^\(\s*SELECT\s+", "", stripped, flags=re.IGNORECASE).strip()
+    # Strip any lone trailing closing paren left behind
+    stripped = re.sub(r"\)\s*$", "", stripped).strip()
+    # Strip trailing ) AS alias_name left behind by subquery wrapping
+    stripped = re.sub(r"\)\s*AS\s+\w+\s*$", "", stripped, flags=re.IGNORECASE).strip()
+
+    # Then strip any remaining lone trailing )
+    if stripped.count("(") < stripped.count(")"):
+        stripped = re.sub(r"\)\s*$", "", stripped).strip()
+
+    # Prepend exactly one clean SELECT
     full_text = "SELECT " + stripped
 
     # Strategy 1: content inside ```sql ... ``` or ``` ... ``` fences
@@ -183,7 +192,6 @@ def extract_sql(llm_output: str) -> str | None:
     match = re.search(r"(SELECT[\s\S]+)", full_text, re.IGNORECASE)
     if match:
         candidate = match.group(1).strip()
-        # Cut off at the first blank line after some SQL has been collected
         lines = candidate.splitlines()
         sql_lines = []
         for line in lines:

@@ -123,6 +123,8 @@ CREATE TABLE Edit_Status (
     edit_status_name TEXT NOT NULL
 );
 
+-- Use this table to get the human-readable name of a denial reason.
+-- Correct column names: denial_reason, denial_reason_name
 CREATE TABLE Denial_Reason (
     denial_reason INT PRIMARY KEY,
     denial_reason_name TEXT NOT NULL
@@ -185,6 +187,9 @@ CREATE TABLE Application (
     LocationID INT REFERENCES Location(LocationID)
 );
 
+-- Use this table to find denial reasons for applications.
+-- Join on denial_reason to get the reason name.
+-- Correct column names: denial_reason, denial_reason_number, ApplicationID
 CREATE TABLE Denial (
     ApplicationID INT REFERENCES Application(ApplicationID),
     denial_reason INT REFERENCES Denial_Reason(denial_reason),
@@ -202,3 +207,8 @@ CREATE TABLE Co_Applicant_Race (
     co_applicant_race_code INT REFERENCES Race(race_code),
     co_applicant_race_number INT
 );
+
+-- Example: most common denial reason
+-- SELECT denial_reason_name, COUNT(*) AS count
+-- FROM Denial JOIN Denial_Reason ON Denial.denial_reason = Denial_Reason.denial_reason
+-- GROUP BY denial_reason_name ORDER BY count DESC LIMIT 1;
